@@ -1,0 +1,68 @@
+Os-Easy 完整安装指南
+===================
+
+问题分析：
+您之前只传输了主程序文件，但缺少了关键的系统驱动程序，这是导致被控端黑屏的主要原因。
+
+完整文件清单：
+=============
+
+1. 主程序文件（已有）
+   位置：C:\Program Files (x86)\Os-Easy\os-easy multicast teaching system\
+   
+2. 关键驱动文件（新增）
+   - vrd.sys (VirtualRender驱动)
+   - 位置：C:\Windows\System32\DriverStore\FileRepository\vrd.inf_amd64_81fbd405ff2470fc\vrd.sys
+   
+3. 注册表配置（新增）
+   - AutoStart.reg (自动启动配置)
+   - UninstallInfo.reg (卸载信息)
+   - VirtualRenderService.reg (驱动服务配置)
+
+安装步骤：
+=========
+
+步骤1：复制主程序文件
+- 将整个 "os-easy multicast teaching system" 文件夹复制到目标电脑的
+  C:\Program Files (x86)\Os-Easy\ 目录下
+
+步骤2：安装驱动程序（重要！）
+- 以管理员身份运行命令提示符
+- 执行：pnputil /add-driver vrd.sys /install
+- 或者手动复制 vrd.sys 到系统驱动目录
+
+步骤3：导入注册表配置
+- 双击 AutoStart.reg 导入自动启动配置
+- 双击 UninstallInfo.reg 导入卸载信息
+- 双击 VirtualRenderService.reg 导入驱动服务配置
+
+步骤4：配置防火墙
+- 为以下程序添加防火墙例外：
+  * ScreenSender.exe
+  * ScreenRender.exe
+  * StudentScreenHelper.exe
+  * Student.exe
+  * Teacher.exe
+  * 其他 Os-Easy 相关程序
+
+步骤5：启动服务
+- 以管理员身份运行：sc start VirtualRender
+- 重启计算机
+
+故障排除：
+=========
+
+如果仍然黑屏：
+1. 检查 VirtualRender 驱动是否正确安装
+2. 确认防火墙规则已添加
+3. 检查网络连接
+4. 确认学生端程序正在运行
+
+重要提示：
+=========
+- VirtualRender 驱动是解决黑屏问题的关键
+- 必须以管理员权限安装驱动
+- 建议在测试环境先验证后再部署
+
+联系信息：
+如有问题，请检查系统事件日志获取详细错误信息。
