@@ -12,3 +12,10 @@
 7. git checkout -- file  把文件在工作区的修改全部撤销，这里有两种情况：
 一种是 file 从没有被 add，那就直接回到和版本库一模一样的状态
 一种是 file 已经被 add 了，但是还没有 commit，那么 git checkout -- file 就会把 file 重新恢复到 add 的状态。
+
+上面是已经 commit 的状态。
+
+xiazminanchagnshi huguyig
+
+非常好 已经成功把原来的内容 回到 add 时的状态
+现在尝试 把 add 时 的状态回到上次 commit 时的状态
