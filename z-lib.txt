@@ -8,3 +8,7 @@
 就不会保存你写的内容了，因为你没有commit成一个版本啊，回退或者
 前进都是回到的是 commit 版本，不是你现在的 M 状态
 
+
+7. git checkout -- file  把文件在工作区的修改全部撤销，这里有两种情况：
+一种是 file 从没有被 add，那就直接回到和版本库一模一样的状态
+一种是 file 已经被 add 了，但是还没有 commit，那么 git checkout -- file 就会把 file 重新恢复到 add 的状态。
