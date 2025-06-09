@@ -1,0 +1,132 @@
+#region namespace imports
+using System;
+using System.Collections;
+using System.Drawing;
+using System.IO;
+using System.Windows.Forms;
+using Cognex.VisionPro;
+using Cognex.VisionPro.ToolBlock;
+using Cognex.VisionPro3D;
+using Cognex.VisionPro.ImageProcessing;
+using Cognex.VisionPro.PMAlign;
+using Cognex.VisionPro.Caliper;
+using Cognex.VisionPro.Dimensioning;
+#endregion
+
+public class CogToolBlockAdvancedScript : CogToolBlockAdvancedScriptBase
+{
+  #region Private Member Variables
+  private Cognex.VisionPro.ToolBlock.CogToolBlock mToolBlock;
+  #endregion
+  CogLineSegment[] clss; 
+  CogGraphicLabel[] labels;
+
+  /// <summary>
+  /// Called when the parent tool is run.
+  /// Add code here to customize or replace the normal run behavior.
+  /// </summary>
+  /// <param name="message">Sets the Message in the tool's RunStatus.</param>
+  /// <param name="result">Sets the Result in the tool's RunStatus</param>
+  /// <returns>True if the tool should run normally,
+  ///          False if GroupRun customizes run behavior</returns>
+  public override bool GroupRun(ref string message, ref CogToolResultConstants result)
+  {
+    // To let the execution stop in this script when a debugger is attached, uncomment the following lines.
+    // #if DEBUG
+    // if (System.Diagnostics.Debugger.IsAttached) System.Diagnostics.Debugger.Break();
+    // #endif
+
+
+    // Run each tool using the RunTool function
+    foreach(ICogTool tool in mToolBlock.Tools)
+      mToolBlock.RunTool(tool, ref message, ref result);
+
+    CogPMAlignTool pma = mToolBlock.Tools["CogFMAlignTooll"] as CogPMAlignTool;
+    CogCaliperTool cpt = mToolBlock.Tools["CogCaliperTooll"] as CogCaliperTool; 
+    CogDistancePointLineTool dpl = mToolBlock.Tools["CogDistancePointLineTool1"] as CogDistancePointLineTool;  
+    
+    int count = pma.Results.Count; 
+    clss = new CogLineSegment[count]; 
+    labels = new CogGraphicLabel[count];
+    
+    for(int i = 0;i < count;i++) {
+      double x = pma.Results[i].GetPose().TranslationX; 
+      double y = pma.Results[i].GetPose().TranslationY;
+      
+      cpt.Region.CenterX = x; 
+      cpt.Region.CenterY = y;
+      cpt.Run();
+      
+      double xl = cpt.Results[0].Edge0.PositionX; 
+      double yl = cpt.Results[0].Edge0.PositionY;
+      
+      dpl.X = xl; 
+      dpl.Y = yl;
+      dpl.Run();
+      
+      CogLineSegment cls = new CogLineSegment();
+      cls.StartX = xl; 
+      cls.StartY = yl;
+      cls.EndX = dpl.LineX; 
+      cls.EndY = dpl.LineY;
+      cls.Color = CogColorConstants.Red;
+      cls.LineWidthInScreenPixels = 5; 
+      cls.CreateLine();
+      clss[i] = cls;    
+      
+      double height = dpl.Distance; 
+      CogGraphicLabel label = new CogGraphicLabel(); 
+      label.SetXYText(xl, yl, "高度为" + height.ToString("F2"));
+      label.Font = new Font("楷体", 20); 
+      label.Color = CogColorConstants.Orange;
+      labels[i] = label; 
+    }
+    return false;
+  }
+
+  #region When the Current Run Record is Created
+  /// <summary>
+  /// Called when the current record may have changed and is being reconstructed
+  /// </summary>
+  /// <param name="currentRecord">
+  /// The new currentRecord is available to be initialized or customized.</param>
+  public override void ModifyCurrentRunRecord(Cognex.VisionPro.ICogRecord currentRecord)
+  {
+  }
+  #endregion
+
+  #region When the Last Run Record is Created
+  /// <summary>
+  /// Called when the last run record may have changed and is being reconstructed
+  /// </summary>
+  /// <param name="lastRecord">
+  /// The new last run record is available to be initialized or customized.</param>
+  public override void ModifyLastRunRecord(Cognex.VisionPro.ICogRecord lastRecord)
+  {
+    foreach(CogGraphicLabel l in labels) {
+      mToolBlock.AddGraphicToRunRecord(l, lastRecord, "CogIPOneImageTooll.InputImage", "");
+    }
+    foreach(CogLineSegment s in clss) {
+      mToolBlock.AddGraphicToRunRecord(s, lastRecord, "CogIPOneImageTooll.InputImage", "");
+    }
+  }
+  #endregion
+
+  #region When the Script is Initialized
+  /// <summary>
+  /// Perform any initialization required by your script here
+  /// </summary>
+  /// <param name="host">The host tool</param>
+  public override void Initialize(Cognex.VisionPro.ToolGroup.CogToolGroup host)
+  {
+    // DO NOT REMOVE - Call the base class implementation first - DO NOT REMOVE
+    base.Initialize(host);
+
+
+    // Store a local copy of the script host
+    this.mToolBlock = ((Cognex.VisionPro.ToolBlock.CogToolBlock)(host));
+  }
+  #endregion
+
+}
+
